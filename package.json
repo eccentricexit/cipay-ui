@@ -1,0 +1,62 @@
+{
+  "name": "with-typescript",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc --project tsconfig.json --pretty --noEmit",
+    "lint:eslint": "eslint --ext js,jsx,ts,tsx",
+    "lint:eslint:fix": "eslint --ext js,jsx,ts,tsx --fix",
+    "lint:prettier": "prettier --config .prettierrc.js . --check",
+    "lint:prettier:fix": "prettier --config .prettierrc.js . --write",
+    "lint": "npm run lint:eslint && npm run lint:prettier && npm run type-check",
+    "lint:fix": "npm run lint:eslint:fix && npm run lint:prettier:fix && npm run type-check",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "watch:ts": "tsc --incremental --watch",
+    "watch:node": "nodemon",
+    "release": "standard-version"
+  },
+  "dependencies": {
+    "next": "^10.0.4",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
+    "@types/node": "^12.12.21",
+    "@types/react": "^16.9.16",
+    "@types/react-dom": "^16.9.4",
+    "@typescript-eslint/eslint-plugin": "^4.11.1",
+    "@typescript-eslint/parser": "^4.11.1",
+    "eslint": "^7.16.0",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.3.0",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "husky": "^4.3.6",
+    "lint-staged": "^10.5.3",
+    "prettier": "^2.2.1",
+    "typescript": "4.0"
+  },
+  "volta": {
+    "node": "14.15.0"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*": "npm run lint"
+  }
+}
