@@ -1,5 +1,6 @@
 module.exports = {
   root: true,
+  plugins: ['unicorn', 'react-hooks', 'prettier', 'jsx-a11y'],
   env: {
     node: true,
     es6: true,
@@ -24,21 +25,20 @@ module.exports = {
         'plugin:react/recommended', // React rules
         'plugin:react-hooks/recommended', // React hooks rules
         'plugin:jsx-a11y/recommended', // Accessibility rules
-        'prettier/@typescript-eslint', // Prettier plugin
         'plugin:prettier/recommended', // Prettier recommended rules
+        'prettier/@typescript-eslint', // Prettier plugin
+        'prettier/react',
+        'plugin:unicorn/recommended', // unicorn
       ],
       rules: {
         // We will use TypeScript's types for component props instead
         'react/prop-types': 'off',
-
         // No need to import React when using Next.js
         'react/react-in-jsx-scope': 'off',
-
         // This rule is not compatible with Next.js's <Link /> components
         'jsx-a11y/anchor-is-valid': 'off',
-
-        // Why would you want unused vars?
         '@typescript-eslint/no-unused-vars': ['error'],
+        'unicorn/no-useless-undefined': 0,
 
         // I suggest this setting for requiring return types on functions only where useful
         '@typescript-eslint/explicit-function-return-type': [
@@ -67,21 +67,10 @@ module.exports = {
 
     // unicorn
     'unicorn/no-fn-reference-in-iterator': 0, // Allows [].map(func)
-    'unicorn/catch-error-name': [2, { name: 'err' }],
+    'unicorn/catch-error-name': [2, { name: 'error' }],
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/no-abusive-eslint-disable': 'off',
-
-    // import
-    'import/no-unresolved': 2,
-    'import/named': 2,
-    'import/default': 2,
-    'import/namespace': 2,
-    'import/no-named-as-default': 2,
-    'import/no-named-as-default-member': 2,
-    'import/no-extraneous-dependencies': 2,
-    'import/newline-after-import': 2,
-    'import/no-named-default': 2,
-    'import/no-useless-path-segments': 2,
+    'unicorn/no-useless-undefined': 0,
 
     'react/jsx-indent': 0,
     'react/jsx-curly-brace-presence': [2, 'never'],

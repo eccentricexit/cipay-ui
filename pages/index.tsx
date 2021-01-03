@@ -9,8 +9,12 @@ import {
 } from 'bumbag'
 import { useCallback, useEffect, useState } from 'react'
 import { Web3ReactProvider, useWeb3React } from '@web3-react/core'
-import { Web3Provider } from '@ethersproject/providers'
-
+import {
+  Web3Provider,
+  ExternalProvider,
+  JsonRpcFetchFunc,
+} from '@ethersproject/providers'
+import { AbstractConnector } from '@web3-react/abstract-connector'
 import { useEagerConnect, useInactiveListener } from '../hooks'
 import { injected } from '../connectors'
 
@@ -18,17 +22,21 @@ enum ConnectorNames {
   Injected = 'Injected',
 }
 
-const connectorsByName: { [connectorName in ConnectorNames]: any } = {
+const connectorsByName: {
+  [connectorName in ConnectorNames]: AbstractConnector
+} = {
   [ConnectorNames.Injected]: injected,
 }
 
-function getLibrary(provider: any): Web3Provider {
+function getLibrary(
+  provider: ExternalProvider | JsonRpcFetchFunc
+): Web3Provider {
   const library = new Web3Provider(provider)
   library.pollingInterval = 12000
   return library
 }
 
-const IndexPage = () => {
+const IndexPage = (): JSX.Element => {
   return (
     <BumbagProvider>
       <Web3ReactProvider getLibrary={getLibrary}>
@@ -38,8 +46,11 @@ const IndexPage = () => {
   )
 }
 
-const App = () => {
-  const { account, active, library, activate, connector } = useWeb3React()
+const App = (): JSX.Element => {
+  const web3ReactContext = useWeb3React()
+  const { account, active, activate, connector } = web3ReactContext
+  const library: Web3Provider = web3ReactContext.library
+  const [connection, setConnection] = useState<WebSocket | undefined>()
 
   // handle logic to recognize the connector currently being activated
   const [activatingConnector, setActivatingConnector] = useState<any>()
@@ -58,22 +69,55 @@ const App = () => {
   const onConnectWallet = useCallback(() => {
     setActivatingConnector(connectorsByName[ConnectorNames.Injected])
     activate(connectorsByName[ConnectorNames.Injected])
+  }, [activate])
+
+  useEffect(() => {
+    console.info('Attempting to stablish connection...')
+    const ws =
+      new window.WebSocket(`ws://${process.env.NEXT_PUBLIC_BACKEND_URL}`) || {}
+
+    ws.addEventListener('open', () => {
+      console.info(`Connection opened`)
+      setConnection(ws)
+      ws.send('Hello')
+    })
+
+    ws.addEventListener('message', (event) => {
+      console.info('Got message', event.data)
+    })
+
+    ws.addEventListener('error', () => {
+      console.error('Error in websocket')
+    })
+
+    ws.addEventListener('close', (event) => {
+      console.info('Closed ws connection:', event.code, event.reason)
+      setConnection(undefined)
+    })
   }, [])
 
   const onRequestPay = useCallback(() => {
-    if (!library) return
-    library
-      .getSigner(account)
-      .signMessage('👋')
-      .then((signature: any) => {
-        window.alert(`Success!\n\n${signature}`)
-      })
-      .catch((error: any) => {
-        window.alert(
-          'Failure!' + (error && error.message ? `\n\n${error.message}` : '')
+    if (!library || !account || !connection) return
+    ;(async () => {
+      try {
+        const signer = library.getSigner(account)
+        const signature = await signer.signMessage('👋')
+        console.info('Got signature', signature)
+
+        connection.send(
+          JSON.stringify({
+            signature,
+            qrCode: 'Here it comes!',
+          })
         )
-      })
-  }, [library, account])
+        console.info('Message sent')
+      } catch (error) {
+        console.error(
+          `Failure!${error && error.message ? `\n\n${error.message}` : ''}`
+        )
+      }
+    })()
+  }, [library, account, connection])
 
   return (
     <PageContent>
