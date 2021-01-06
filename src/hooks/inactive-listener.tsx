@@ -1,56 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useWeb3React } from '@web3-react/core';
-
 import { injected } from '../connectors';
 
-export function useEagerConnect() {
-  const { activate, active } = useWeb3React();
-
-  const [tried, setTried] = useState(false);
-
-  useEffect(() => {
-    injected.isAuthorized().then((isAuthorized: boolean) => {
-      if (isAuthorized) {
-        activate(injected, undefined, true).catch(() => {
-          setTried(true);
-        });
-      } else {
-        setTried(true);
-      }
-    });
-  }, []); // intentionally only running on mount (make sure it's only mounted once :))
-
-  // if the connection worked, wait until we get confirmation of that to flip the flag
-  useEffect(() => {
-    if (!tried && active) {
-      setTried(true);
-    }
-  }, [tried, active]);
-
-  return tried;
-}
-
-export function useInactiveListener(suppress: boolean = false) {
+export default function useInactiveListener(suppress = false): void {
   const { active, error, activate } = useWeb3React();
 
-  useEffect((): any => {
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { ethereum } = window as any;
     if (ethereum && ethereum.on && !active && !error && !suppress) {
-      const handleConnect = () => {
+      const handleConnect = (): void => {
         console.log("Handling 'connect' event");
         activate(injected);
       };
-      const handleChainChanged = (chainId: string | number) => {
+      const handleChainChanged = (chainId: string | number): void => {
         console.log("Handling 'chainChanged' event with payload", chainId);
         activate(injected);
       };
-      const handleAccountsChanged = (accounts: string[]) => {
+      const handleAccountsChanged = (accounts: string[]): void => {
         console.log("Handling 'accountsChanged' event with payload", accounts);
-        if (accounts.length > 0) {
-          activate(injected);
-        }
+        if (accounts.length > 0) activate(injected);
       };
-      const handleNetworkChanged = (networkId: string | number) => {
+      const handleNetworkChanged = (networkId: string | number): void => {
         console.log("Handling 'networkChanged' event with payload", networkId);
         activate(injected);
       };

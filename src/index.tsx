@@ -7,8 +7,7 @@ import {
   ExternalProvider,
   JsonRpcFetchFunc,
 } from '@ethersproject/providers';
-
-import App from './App';
+import App from './app';
 import reportWebVitals from './reportWebVitals';
 
 const getLibrary = (
@@ -27,7 +26,7 @@ ReactDOM.render(
       </Web3ReactProvider>
     </BumbagProvider>
   </React.StrictMode>,
-  document.getElementById('root')
+  document.querySelector('#root')
 );
 
 // If you want to start measuring performance in your app, pass a function

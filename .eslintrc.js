@@ -14,8 +14,6 @@ module.exports = {
     'plugin:prettier/recommended', // prettier overrides
     'prettier/react',
     'plugin:jsx-a11y/recommended',
-    'plugin:import/errors',
-    'plugin:import/warnings',
     'plugin:promise/recommended',
   ],
   overrides: [
@@ -46,14 +44,8 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': ['error'],
         'unicorn/no-useless-undefined': 0,
 
-        // I suggest this setting for requiring return types on functions only where useful
-        '@typescript-eslint/explicit-function-return-type': [
-          'warn',
-          {
-            allowExpressions: true,
-            allowConciseArrowFunctionExpressionsStartingWithVoid: true,
-          },
-        ],
+        '@typescript-eslint/explicit-function-return-type': 0,
+        '@typescript-eslint/explicit-module-boundary-types': 0,
 
         'prefer-const': 2,
         'arrow-body-style': [2, 'as-needed'],
@@ -80,18 +72,6 @@ module.exports = {
     ],
     'no-useless-concat': 2,
     'prefer-template': 2,
-
-    // import
-    'import/no-unresolved': 2,
-    'import/named': 2,
-    'import/default': 2,
-    'import/namespace': 2,
-    'import/no-named-as-default': 2,
-    'import/no-named-as-default-member': 2,
-    'import/no-extraneous-dependencies': 2,
-    'import/newline-after-import': 2,
-    'import/no-named-default': 2,
-    'import/no-useless-path-segments': 2,
 
     // unicorn
     'unicorn/no-fn-reference-in-iterator': 0, // Allows [].map(func)
