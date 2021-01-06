@@ -1,1 +1,1 @@
-export { default as Networks } from './erc20';
+export { default as ERC20Tokens } from './erc20-tokens';

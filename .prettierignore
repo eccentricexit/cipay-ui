@@ -2,3 +2,8 @@ node_modules
 .vscode
 package-lock.json
 package.json
+build
+.env
+.eslintignore
+.gitignore
+.prettierignore

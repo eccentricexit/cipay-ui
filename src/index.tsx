@@ -8,7 +8,7 @@ import {
   JsonRpcFetchFunc,
 } from '@ethersproject/providers';
 import App from './app';
-import reportWebVitals from './reportWebVitals';
+import reportWebVitals from './report-web-vitals';
 
 const getLibrary = (
   provider: ExternalProvider | JsonRpcFetchFunc

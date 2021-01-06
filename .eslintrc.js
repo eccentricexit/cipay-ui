@@ -41,7 +41,7 @@ module.exports = {
       rules: {
         // We will use TypeScript's types for component props instead
         'react/prop-types': 'off',
-        '@typescript-eslint/no-unused-vars': ['error'],
+        '@typescript-eslint/no-unused-vars': ['warn'],
         'unicorn/no-useless-undefined': 0,
 
         '@typescript-eslint/explicit-function-return-type': 0,
@@ -57,7 +57,7 @@ module.exports = {
         'no-useless-concat': 2,
         'prefer-template': 2,
 
-        'prettier/prettier': ['error', {}, { usePrettierrc: true }], // Includes .prettierrc.js rules
+        'prettier/prettier': ['warn', {}, { usePrettierrc: true }], // Includes .prettierrc.js rules
       },
     },
   ],
@@ -88,7 +88,7 @@ module.exports = {
     'react/destructuring-assignment': [2, 'always'],
 
     // hooks
-    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/rules-of-hooks': 'warn',
     'react-hooks/exhaustive-deps': 'warn',
   },
 };

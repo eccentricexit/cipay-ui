@@ -1,10 +1,12 @@
 import { useWeb3React } from '@web3-react/core';
 import { useCallback, useEffect, useState } from 'react';
 import { AbstractConnector } from '@web3-react/abstract-connector';
+import { ethers } from 'ethers';
 import useEagerConnect from './eager-connect';
 import useInactiveListener from './inactive-listener';
 import { injected } from '../connectors';
 import { Web3ReactContextInterface } from '@web3-react/core/dist/types';
+import { UncheckedJsonRpcSigner } from '../types/global';
 
 enum ConnectorNames {
   Injected = 'Injected',
@@ -18,12 +20,17 @@ const connectorsByName: {
 
 interface Properties extends Web3ReactContextInterface {
   onConnectWallet: () => void;
+  uncheckedSigner?: UncheckedJsonRpcSigner;
 }
 
 // Requires web3-react in the context.
 const useWallet = (): Properties => {
   const web3ReactContext = useWeb3React();
-  const { activate, connector } = web3ReactContext;
+  const { activate, connector, account } = web3ReactContext;
+  const library: ethers.providers.JsonRpcProvider = web3ReactContext.library;
+  const [uncheckedSigner, setUncheckedSigner] = useState<
+    undefined | UncheckedJsonRpcSigner
+  >();
 
   // Handle logic to recognize the connector currently being activated.
   const [activatingConnector, setActivatingConnector] = useState<unknown>();
@@ -38,6 +45,17 @@ const useWallet = (): Properties => {
   // Handle logic to connect in reaction to certain events on the injected ethereum provider, if it exists.
   useInactiveListener(!triedEager || !!activatingConnector);
 
+  useEffect(() => {
+    if (!library || !account) return;
+    (async () => {
+      try {
+        setUncheckedSigner(await library.getUncheckedSigner());
+      } catch {
+        console.error('Error getting signer');
+      }
+    })();
+  }, [account, library]);
+
   const onConnectWallet = useCallback(() => {
     setActivatingConnector(connectorsByName[ConnectorNames.Injected]);
     activate(connectorsByName[ConnectorNames.Injected]);
@@ -46,6 +64,7 @@ const useWallet = (): Properties => {
   return {
     ...web3ReactContext,
     onConnectWallet,
+    uncheckedSigner,
   };
 };
 
