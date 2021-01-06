@@ -13,9 +13,11 @@ export default function useSocket({
 }: Properties) {
   const [connection, setConnection] = useState<WebSocket | undefined>();
   const [error, setError] = useState<Event | undefined>();
+  const [tried, setTried] = useState<boolean>(false);
 
   useEffect(() => {
-    if (error) return;
+    if (tried) return;
+    setTried(true);
     console.info('Attempting to stablish connection...');
     const ws =
       new window.WebSocket(`ws://${process.env.REACT_APP_BACKEND_URL}`) || {};
@@ -45,7 +47,7 @@ export default function useSocket({
       setConnection(undefined);
       onConnectionClosed(event);
     });
-  }, [error, onConnectionClosed, onConnectionOpened, onMessageReceived]);
+  }, [onConnectionClosed, onConnectionOpened, onMessageReceived, tried]);
 
   return {
     connection,

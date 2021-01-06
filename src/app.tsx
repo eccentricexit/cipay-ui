@@ -1,5 +1,5 @@
 import { PageContent, Input, Button, Stack, Card, Flex } from 'bumbag';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { useWallet } from './hooks';
 import useSocket from './hooks/socket';
@@ -15,8 +15,21 @@ const App = (): JSX.Element => {
     uncheckedSigner,
     library,
   } = useWallet();
+  const [paymentFinished, setPaymentFinished] = useState<boolean | undefined>();
   const { connection } = useSocket({
-    onMessageReceived: useCallback(() => undefined, []),
+    onMessageReceived: useCallback((event: MessageEvent) => {
+      const { message } = JSON.parse(event.data);
+      switch (message) {
+        case 'success': {
+          setPaymentFinished(true);
+          connection?.close();
+          break;
+        }
+        default:
+          console.error('Unknown server response.');
+          break;
+      }
+    }, []),
   });
 
   const tokens = useMemo(() => chainId && ERC20Tokens[chainId], [chainId]);
@@ -42,6 +55,9 @@ const App = (): JSX.Element => {
         // For now, only one token is supported.
         const tokenContract = tokenContracts[0];
 
+        // Maybe send the QR Code immediately to detect
+        // if cipay has enough funds to cover this tx.
+
         console.info('requesting signature...');
         const tx = await tokenContract.transfer(
           process.env.REACT_APP_TARGET_WALLET,
@@ -50,6 +66,7 @@ const App = (): JSX.Element => {
 
         connection.send(
           JSON.stringify({
+            type: 'payment-request',
             txHash: tx.hash,
             qrCode: 'Here it comes!',
           })
@@ -65,6 +82,7 @@ const App = (): JSX.Element => {
   return (
     <PageContent>
       {!tokens && 'Network not supported.'}
+      {paymentFinished && 'Done.'}
       <Card>
         <Stack>
           <Input placeholder="Enter your the QR code here." />
