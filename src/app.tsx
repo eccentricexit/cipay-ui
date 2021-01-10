@@ -17,7 +17,7 @@ const App = (): JSX.Element => {
   } = useWallet();
   const [paymentFinished, setPaymentFinished] = useState<boolean | undefined>();
   const { connection } = useSocket({
-    onMessageReceived: useCallback((event: MessageEvent) => {
+    onMessageReceived: (event: MessageEvent) => {
       const { message } = JSON.parse(event.data);
       switch (message) {
         case 'success': {
@@ -29,7 +29,7 @@ const App = (): JSX.Element => {
           console.error('Unknown server response.');
           break;
       }
-    }, []),
+    },
   });
 
   const tokens = useMemo(() => chainId && ERC20Tokens[chainId], [chainId]);
@@ -39,6 +39,10 @@ const App = (): JSX.Element => {
       ({ address }) => new ethers.Contract(address, erc20Abi, uncheckedSigner)
     );
   }, [chainId, tokens, uncheckedSigner]);
+  const [qrCode, setQrCode] = useState('');
+  const onQRCodeReceived = useCallback((event) => {
+    setQrCode(event.target.value || '');
+  }, []);
 
   const onRequestPay = useCallback(() => {
     if (
@@ -55,10 +59,8 @@ const App = (): JSX.Element => {
         // For now, only one token is supported.
         const tokenContract = tokenContracts[0];
 
-        // Maybe send the QR Code immediately to detect
+        // Send the QR Code immediately to detect
         // if cipay has enough funds to cover this tx.
-
-        console.info('requesting signature...');
         const tx = await tokenContract.transfer(
           process.env.REACT_APP_TARGET_WALLET,
           1
@@ -68,7 +70,7 @@ const App = (): JSX.Element => {
           JSON.stringify({
             type: 'payment-request',
             txHash: tx.hash,
-            qrCode: 'Here it comes!',
+            qrCode,
           })
         );
       } catch (error) {
@@ -77,7 +79,15 @@ const App = (): JSX.Element => {
         );
       }
     })();
-  }, [account, chainId, connection, tokenContracts, tokens, uncheckedSigner]);
+  }, [
+    account,
+    chainId,
+    connection,
+    qrCode,
+    tokenContracts,
+    tokens,
+    uncheckedSigner,
+  ]);
 
   return (
     <PageContent>
@@ -85,7 +95,11 @@ const App = (): JSX.Element => {
       {paymentFinished && 'Done.'}
       <Card>
         <Stack>
-          <Input placeholder="Enter your the QR code here." />
+          <Input
+            placeholder="Enter your the QR code here."
+            onChange={onQRCodeReceived}
+            value={qrCode}
+          />
           <Flex alignX="right">
             {active ? (
               library &&
