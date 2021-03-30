@@ -7,3 +7,7 @@ build
 .eslintignore
 .gitignore
 .prettierignore
+.env
+src/abis/**
+yarn.lock
+.env.example

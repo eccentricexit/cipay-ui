@@ -2,103 +2,96 @@ import { PageContent, Input, Button, Stack, Card, Flex } from 'bumbag';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { useWallet } from './hooks';
-import useSocket from './hooks/socket';
-import { ERC20Tokens } from './utils';
 import erc20Abi from './abis/erc20.json';
+import metaTxProxyAbi from './abis/metaTxProxy.json';
+import { buildRequest, buildTypedData } from './utils';
 
 const App = (): JSX.Element => {
-  const {
-    account,
-    onConnectWallet,
-    active,
-    chainId,
-    uncheckedSigner,
-    library,
-  } = useWallet();
-  const [paymentFinished, setPaymentFinished] = useState<boolean | undefined>();
-  const { connection } = useSocket({
-    onMessageReceived: (event: MessageEvent) => {
-      const { message } = JSON.parse(event.data);
-      switch (message) {
-        case 'success': {
-          setPaymentFinished(true);
-          connection?.close();
-          break;
-        }
-        default:
-          console.error('Unknown server response.');
-          break;
-      }
-    },
-  });
+  const { account, onConnectWallet, active, chainId, library } = useWallet();
+  const signer = useMemo(() => library?.getSigner(), [library]);
+  const erc20 = useMemo(
+    () =>
+      new ethers.Contract(
+        process.env.REACT_APP_ERC20_ADDRESS || '',
+        erc20Abi,
+        signer
+      ),
+    [signer]
+  );
+  const metaTxProxy = useMemo(
+    () =>
+      new ethers.Contract(
+        process.env.REACT_APP_META_TX_PROXY_ADDRESS || '',
+        metaTxProxyAbi,
+        signer
+      ),
+    [signer]
+  );
 
-  const tokens = useMemo(() => chainId && ERC20Tokens[chainId], [chainId]);
-  const tokenContracts = useMemo(() => {
-    if (typeof chainId === 'undefined' || !uncheckedSigner || !tokens) return;
-    return Object.values(ERC20Tokens[chainId]).map(
-      ({ address }) => new ethers.Contract(address, erc20Abi, uncheckedSigner)
-    );
-  }, [chainId, tokens, uncheckedSigner]);
-  const [qrCode, setQrCode] = useState('');
+  const [brCode, setBrCode] = useState('');
   const onQRCodeReceived = useCallback((event) => {
-    setQrCode(event.target.value || '');
+    setBrCode(event.target.value || '');
   }, []);
 
   const onRequestPay = useCallback(() => {
-    if (
-      !uncheckedSigner ||
-      !account ||
-      !tokenContracts ||
-      !chainId ||
-      !tokens ||
-      !connection
-    )
+    if (!signer || !account || !chainId || !erc20 || !metaTxProxy || !library)
       return;
-    (async () => {
+    (async (): Promise<void> => {
       try {
-        // For now, only one token is supported.
-        const tokenContract = tokenContracts[0];
+        // TODO: Fetch required amount of tokens from backend.
+        const amount = 1;
+        const from = account;
+        const to = account;
+        const data = erc20.interface.encodeFunctionData('transferFrom', [
+          from,
+          to,
+          amount,
+        ]);
+        const request = await buildRequest(metaTxProxy, {
+          to: erc20.address,
+          from,
+          data,
+        });
 
-        // Send the QR Code immediately to detect
-        // if cipay has enough funds to cover this tx.
-        const tx = await tokenContract.transfer(
-          process.env.REACT_APP_TARGET_WALLET,
-          1
+        const { domain, types, message } = await buildTypedData(
+          metaTxProxy,
+          request
         );
+        const signature = await signer._signTypedData(domain, types, message);
 
-        connection.send(
-          JSON.stringify({
-            type: 'payment-request',
-            txHash: tx.hash,
-            qrCode,
-          })
-        );
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/request-payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            web3: {
+              signature,
+              typedData: {
+                domain,
+                types,
+                message,
+              },
+            },
+            brCode,
+          }),
+        });
       } catch (error) {
         console.error(
           `Failure!${error && error.message ? `\n\n${error.message}` : ''}`
         );
       }
     })();
-  }, [
-    account,
-    chainId,
-    connection,
-    qrCode,
-    tokenContracts,
-    tokens,
-    uncheckedSigner,
-  ]);
+  }, [account, brCode, chainId, erc20, library, metaTxProxy, signer]);
 
   return (
     <PageContent>
-      {!tokens && 'Network not supported.'}
-      {paymentFinished && 'Done.'}
       <Card>
         <Stack>
           <Input
             placeholder="Enter your the QR code here."
             onChange={onQRCodeReceived}
-            value={qrCode}
+            value={brCode}
           />
           <Flex alignX="right">
             {active ? (

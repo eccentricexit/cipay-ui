@@ -2,3 +2,7 @@ node_modules
 .next
 .vscode
 build
+.env
+src/abis/**
+yarn.lock
+.env.example

@@ -5,6 +5,7 @@ declare namespace NodeJS {
   export interface ProcessEnv {
     REACT_APP_BACKEND_URL: string;
     REACT_APP_TARGET_WALLET: string;
+    REACT_APP_ERC20_ADDRESS: string;
   }
 }
 
