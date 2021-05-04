@@ -1,13 +1,28 @@
-import { PageContent, Input, Button, Stack, Card, Flex } from 'bumbag';
-import React, { useCallback, useMemo, useState } from 'react';
+import { Input, Button, Stack, Card, Flex, Alert, Text } from 'bumbag';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
-import { useWallet } from './hooks';
+import { useDebounce, useWallet } from './hooks';
 import erc20Abi from './abis/erc20.json';
 import metaTxProxyAbi from './abis/metaTxProxy.json';
 import { buildRequest, buildTypedData } from './utils';
+import { UnsupportedChainIdError } from '@web3-react/core';
 
 const App = (): JSX.Element => {
-  const { account, onConnectWallet, active, chainId, library } = useWallet();
+  const {
+    account,
+    onConnectWallet,
+    active,
+    chainId,
+    library,
+    error: walletError,
+  } = useWallet();
+  const [error, setError] = useState<unknown>();
+  useEffect(() => {
+    if (walletError) setError(walletError);
+    if (!walletError && error && error instanceof UnsupportedChainIdError)
+      setError(undefined);
+  }, [error, walletError]);
+
   const signer = useMemo(() => library?.getSigner(), [library]);
   const erc20 = useMemo(
     () =>
@@ -28,72 +43,129 @@ const App = (): JSX.Element => {
     [signer]
   );
 
-  const [brCode, setBrCode] = useState('');
-  const onQRCodeReceived = useCallback((event) => {
-    setBrCode(event.target.value || '');
+  const [brcode, setBrcode] = useState('');
+  const [brcodePreview, setBrcodePreview] = useState();
+  const onBrcodeReceived = useCallback((event) => {
+    setBrcode(event.target.value || '');
+  }, []);
+  const debouncedBrcode = useDebounce(brcode, 400);
+  useEffect(() => {
+    (async () => {
+      if (!debouncedBrcode) return;
+
+      setBrcodePreview(
+        await (
+          await fetch(
+            `${process.env.REACT_APP_BACKEND_URL}/amount-required?brcode=${debouncedBrcode}&tokenAddress=${process.env.REACT_APP_TOKEN_ADDRESS}`
+          )
+        ).json()
+      );
+    })();
+  }, [debouncedBrcode]);
+
+  const generatePixInvoice = useCallback(async () => {
+    try {
+      const {
+        invoice: { brcode },
+      } = await (
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-brcode`, {
+          method: 'POST',
+        })
+      ).json();
+
+      setBrcode(brcode);
+    } catch (generatePixInvoiceError) {
+      setError(generatePixInvoiceError);
+    }
   }, []);
 
-  const onRequestPay = useCallback(() => {
-    if (!signer || !account || !chainId || !erc20 || !metaTxProxy || !library)
-      return;
-    (async (): Promise<void> => {
-      try {
-        // TODO: Fetch required amount of tokens from backend.
-        const amount = 1;
-        const from = account;
-        const to = account;
-        const data = erc20.interface.encodeFunctionData('transferFrom', [
-          from,
-          to,
-          amount,
-        ]);
-        const request = await buildRequest(metaTxProxy, {
-          to: erc20.address,
-          from,
-          data,
-        });
+  const onRequestPay = useCallback(async () => {
+    try {
+      if (
+        !signer ||
+        !account ||
+        !chainId ||
+        !erc20 ||
+        !metaTxProxy ||
+        !library ||
+        !brcodePreview
+      )
+        return;
 
-        const { domain, types, message } = await buildTypedData(
-          metaTxProxy,
-          request
-        );
-        const signature = await signer._signTypedData(domain, types, message);
+      const { tokenAmountRequired } = brcodePreview || {
+        tokenAmountRequired: 0,
+      };
+      const amount = tokenAmountRequired;
+      const from = account;
+      const to = account;
+      const data = erc20.interface.encodeFunctionData('transferFrom', [
+        from,
+        to,
+        amount,
+      ]);
+      const request = await buildRequest(metaTxProxy, {
+        to: erc20.address,
+        from,
+        data,
+      });
 
-        await fetch(`${process.env.REACT_APP_BACKEND_URL}/request-payment`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            web3: {
-              signature,
-              typedData: {
-                domain,
-                types,
-                message,
-              },
+      const { domain, types, message } = await buildTypedData(
+        metaTxProxy,
+        request
+      );
+      const signature = await signer._signTypedData(domain, types, message);
+
+      await fetch(`${process.env.REACT_APP_BACKEND_URL}/request-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          web3: {
+            signature,
+            typedData: {
+              domain,
+              types,
+              message,
             },
-            brCode,
-          }),
-        });
-      } catch (error) {
-        console.error(
-          `Failure!${error && error.message ? `\n\n${error.message}` : ''}`
-        );
-      }
-    })();
-  }, [account, brCode, chainId, erc20, library, metaTxProxy, signer]);
+            claimedAddr: account,
+          },
+          brcode: brcode,
+        }),
+      });
+    } catch (error) {
+      console.error(
+        `Failure!${error && error.message ? `\n\n${error.message}` : ''}`
+      );
+    }
+  }, [
+    account,
+    brcode,
+    brcodePreview,
+    chainId,
+    erc20,
+    library,
+    metaTxProxy,
+    signer,
+  ]);
 
   return (
-    <PageContent>
+    <Flex alignX="center" flexDirection="column">
+      <Text>Cipay</Text>
+      {error && (
+        <Alert title="Error" type="danger">
+          {error instanceof String && error}
+        </Alert>
+      )}
       <Card>
         <Stack>
           <Input
             placeholder="Enter your the QR code here."
-            onChange={onQRCodeReceived}
-            value={brCode}
+            onChange={onBrcodeReceived}
+            value={brcode}
           />
           <Flex alignX="right">
+            <Button onClick={generatePixInvoice}>Generate Pix Invoice</Button>
             {active ? (
               library &&
               account && (
@@ -109,7 +181,7 @@ const App = (): JSX.Element => {
           </Flex>
         </Stack>
       </Card>
-    </PageContent>
+    </Flex>
   );
 };
 

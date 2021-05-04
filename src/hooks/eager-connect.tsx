@@ -4,14 +4,13 @@ import { injected } from '../connectors';
 
 export default function useEagerConnect(): boolean {
   const { activate, active } = useWeb3React();
-
   const [tried, setTried] = useState(false);
 
   useEffect(() => {
     (async () => {
       if (tried) return;
       try {
-        if (await injected.isAuthorized()) activate(injected, undefined, true);
+        if (await injected.isAuthorized()) activate(injected, undefined, false);
       } catch {
         setTried(true);
       }
