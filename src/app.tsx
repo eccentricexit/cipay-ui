@@ -2,8 +2,8 @@ import { Input, Button, Stack, Card, Flex, Alert, Text } from 'bumbag';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { useDebounce, useWallet } from './hooks';
-import erc20Abi from './abis/erc20.json';
-import metaTxProxyAbi from './abis/metaTxProxy.json';
+import erc20Abi from './abis/erc20.ovm.json';
+import metaTxProxyAbi from './abis/metaTxProxy.ovm.json';
 import { buildRequest, buildTypedData } from './utils';
 import { UnsupportedChainIdError } from '@web3-react/core';
 
@@ -44,7 +44,9 @@ const App = (): JSX.Element => {
   );
 
   const [brcode, setBrcode] = useState('');
-  const [brcodePreview, setBrcodePreview] = useState();
+  const [brcodePreview, setBrcodePreview] = useState<
+    { tokenAmountRequired: string } | undefined
+  >();
   const onBrcodeReceived = useCallback((event) => {
     setBrcode(event.target.value || '');
   }, []);
@@ -62,6 +64,25 @@ const App = (): JSX.Element => {
       );
     })();
   }, [debouncedBrcode]);
+
+  const [allowance, setAllowance] = useState<ethers.BigNumber | undefined>();
+  useEffect(() => {
+    (async () => {
+      if (!account || !erc20 || !metaTxProxy) return;
+
+      setAllowance(await erc20.allowances(account, metaTxProxy.address));
+    })();
+  }, [account, erc20, metaTxProxy]);
+  const allowanceEnough = useMemo(() => {
+    if (!allowance || !brcodePreview) return false;
+    return allowance.gte(
+      ethers.BigNumber.from(brcodePreview.tokenAmountRequired)
+    );
+  }, [allowance, brcodePreview]);
+  const increaseAllowance = useCallback(async () => {
+    if (!erc20 || !brcodePreview || !metaTxProxy) return;
+    erc20.approve(metaTxProxy.address, brcodePreview.tokenAmountRequired);
+  }, [brcodePreview, erc20, metaTxProxy]);
 
   const generatePixInvoice = useCallback(async () => {
     try {
@@ -166,18 +187,24 @@ const App = (): JSX.Element => {
           />
           <Flex alignX="right">
             <Button onClick={generatePixInvoice}>Generate Pix Invoice</Button>
-            {active ? (
-              library &&
-              account && (
-                <Button palette="primary" onClick={onRequestPay}>
-                  Pay
-                </Button>
-              )
-            ) : (
-              <Button palette="primary" onClick={onConnectWallet}>
-                Connect
+            {allowance && brcodePreview && !allowanceEnough && (
+              <Button palette="primary" onClick={increaseAllowance}>
+                Unlock Token
               </Button>
             )}
+            {brcodePreview &&
+              (active ? (
+                library &&
+                account && (
+                  <Button palette="primary" onClick={onRequestPay}>
+                    Pay
+                  </Button>
+                )
+              ) : (
+                <Button palette="primary" onClick={onConnectWallet}>
+                  Connect
+                </Button>
+              ))}
           </Flex>
         </Stack>
       </Card>
