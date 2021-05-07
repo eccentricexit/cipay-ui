@@ -84,11 +84,6 @@ const App = (): JSX.Element => {
   }, [account, erc20, metaTxProxy]);
   const allowanceEnough = useMemo(() => {
     if (!allowance || !brcodePreview) return false;
-    console.info('allowance', allowance.toString());
-    console.info(
-      'brcodePreview.tokenAmountRequired',
-      brcodePreview.tokenAmountRequired
-    );
     return allowance.gte(
       ethers.BigNumber.from(brcodePreview.tokenAmountRequired)
     );
@@ -134,11 +129,8 @@ const App = (): JSX.Element => {
         tokenAmountRequired: '0',
       };
       const amount = tokenAmountRequired;
-      console.info('balance', (await erc20.balanceOf(account)).toString());
       const from = account;
       const to = process.env.REACT_APP_TARGET_WALLET || '';
-      console.info('to', to);
-      console.info('amountRequired', amount);
 
       const types = { ERC20MetaTransaction };
       const domain = {
@@ -156,23 +148,6 @@ const App = (): JSX.Element => {
         expiry: Math.ceil(Date.now() / 1000 + 24 * 60 * 60),
       };
       const signature = await signer._signTypedData(domain, types, message);
-      console.info('nonce', message.nonce);
-      console.info(
-        'recovered',
-        await metaTxProxy.verify(
-          {
-            from,
-            to,
-            signature,
-          },
-          {
-            tokenContract: message.tokenContract,
-            amount: message.amount,
-            nonce: message.nonce,
-            expiry: message.expiry,
-          }
-        )
-      );
 
       await fetch(`${process.env.REACT_APP_BACKEND_URL}/request-payment`, {
         method: 'POST',
