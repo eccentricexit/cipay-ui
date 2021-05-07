@@ -8,56 +8,24 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "success",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "returndata",
-        "type": "bytes"
-      }
-    ],
-    "name": "CallExecuted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "_address",
+        "name": "_from",
         "type": "address"
       },
       {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "_whitelisted",
-        "type": "bool"
-      }
-    ],
-    "name": "WhitelistUpdated",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "CACHED_CHAIN_ID",
-    "outputs": [
-      {
+        "indexed": true,
         "internalType": "uint256",
-        "name": "",
+        "name": "_nonce",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "name": "MetaTx",
+    "type": "event"
   },
   {
     "inputs": [],
-    "name": "CACHED_DOMAIN_SEPARATOR",
+    "name": "DOMAIN_SEPARATOR",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -70,7 +38,7 @@
   },
   {
     "inputs": [],
-    "name": "HASHED_NAME",
+    "name": "EIP712DOMAIN_TYPEHASH",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -83,101 +51,7 @@
   },
   {
     "inputs": [],
-    "name": "HASHED_VERSION",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "TYPEHASH",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "TYPE_HASH",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "typeHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "name",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "version",
-        "type": "bytes32"
-      }
-    ],
-    "name": "buildDomainSeparator",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_newGovernor",
-        "type": "address"
-      }
-    ],
-    "name": "changeGovernor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_newRelayer",
-        "type": "address"
-      }
-    ],
-    "name": "changeRelayer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "domainSeparatorV4",
+    "name": "ERC20METATRANSACTION_TYPEHASH",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -203,13 +77,25 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct GenericMetaTxProcessor.Call",
+        "name": "_callData",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenContract",
+            "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "gas",
+            "name": "amount",
             "type": "uint256"
           },
           {
@@ -218,22 +104,17 @@
             "type": "uint256"
           },
           {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
+            "internalType": "uint256",
+            "name": "expiry",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct MetaTxProxy.ForwardRequest",
-        "name": "req",
+        "internalType": "struct GenericMetaTxProcessor.CallParams",
+        "name": "_callParams",
         "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
       }
     ],
-    "name": "execute",
+    "name": "executeMetaTransaction",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -254,31 +135,12 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "structHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "hashTypedDataV4",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "name": "nonces",
+    "name": "nonce",
     "outputs": [
       {
         "internalType": "uint256",
@@ -306,18 +168,50 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_address",
+        "name": "_governor",
+        "type": "address"
+      }
+    ],
+    "name": "setGovernor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_tokenAddr",
         "type": "address"
       },
       {
         "internalType": "bool",
-        "name": "_whitelisted",
+        "name": "_accepted",
         "type": "bool"
       }
     ],
-    "name": "setWhitelisted",
+    "name": "setTokenAccepted",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "tokenAccepted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -335,13 +229,25 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct GenericMetaTxProcessor.Call",
+        "name": "_callData",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenContract",
+            "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "gas",
+            "name": "amount",
             "type": "uint256"
           },
           {
@@ -350,46 +256,22 @@
             "type": "uint256"
           },
           {
-            "internalType": "bytes",
-            "name": "data",
-            "type": "bytes"
+            "internalType": "uint256",
+            "name": "expiry",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct MetaTxProxy.ForwardRequest",
-        "name": "req",
+        "internalType": "struct GenericMetaTxProcessor.CallParams",
+        "name": "_callParams",
         "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
       }
     ],
     "name": "verify",
     "outputs": [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "name": "whitelisted",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",

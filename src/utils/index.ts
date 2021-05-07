@@ -1,2 +1,2 @@
 export { default as ERC20Tokens } from './erc20-tokens';
-export { buildRequest, buildTypedData } from './eip712';
+export { ERC20MetaTransaction } from './eip712';

@@ -4,8 +4,17 @@ import { ethers } from 'ethers';
 import { useDebounce, useWallet } from './hooks';
 import erc20Abi from './abis/erc20.ovm.json';
 import metaTxProxyAbi from './abis/metaTxProxy.ovm.json';
-import { buildRequest, buildTypedData } from './utils';
+import { ERC20MetaTransaction } from './utils';
 import { UnsupportedChainIdError } from '@web3-react/core';
+
+interface SignRequest {
+  from: string;
+  to: string;
+  tokenContract: string;
+  amount: string;
+  nonce: number;
+  expiry: number;
+}
 
 const App = (): JSX.Element => {
   const {
@@ -58,7 +67,7 @@ const App = (): JSX.Element => {
       setBrcodePreview(
         await (
           await fetch(
-            `${process.env.REACT_APP_BACKEND_URL}/amount-required?brcode=${debouncedBrcode}&tokenAddress=${process.env.REACT_APP_TOKEN_ADDRESS}`
+            `${process.env.REACT_APP_BACKEND_URL}/amount-required?brcode=${debouncedBrcode}&tokenAddress=${process.env.REACT_APP_ERC20_ADDRESS}`
           )
         ).json()
       );
@@ -75,13 +84,21 @@ const App = (): JSX.Element => {
   }, [account, erc20, metaTxProxy]);
   const allowanceEnough = useMemo(() => {
     if (!allowance || !brcodePreview) return false;
+    console.info('allowance', allowance.toString());
+    console.info(
+      'brcodePreview.tokenAmountRequired',
+      brcodePreview.tokenAmountRequired
+    );
     return allowance.gte(
       ethers.BigNumber.from(brcodePreview.tokenAmountRequired)
     );
   }, [allowance, brcodePreview]);
   const increaseAllowance = useCallback(async () => {
     if (!erc20 || !brcodePreview || !metaTxProxy) return;
-    erc20.approve(metaTxProxy.address, brcodePreview.tokenAmountRequired);
+    erc20.approve(
+      metaTxProxy.address,
+      '1000000000000000000000000000000000000000'
+    );
   }, [brcodePreview, erc20, metaTxProxy]);
 
   const generatePixInvoice = useCallback(async () => {
@@ -114,27 +131,48 @@ const App = (): JSX.Element => {
         return;
 
       const { tokenAmountRequired } = brcodePreview || {
-        tokenAmountRequired: 0,
+        tokenAmountRequired: '0',
       };
       const amount = tokenAmountRequired;
+      console.info('balance', (await erc20.balanceOf(account)).toString());
       const from = account;
-      const to = account;
-      const data = erc20.interface.encodeFunctionData('transferFrom', [
+      const to = process.env.REACT_APP_TARGET_WALLET || '';
+      console.info('to', to);
+      console.info('amountRequired', amount);
+
+      const types = { ERC20MetaTransaction };
+      const domain = {
+        name: 'MetaTxRelay',
+        version: '1',
+        verifyingContract: metaTxProxy.address,
+      };
+
+      const message: SignRequest = {
         from,
         to,
+        tokenContract: erc20.address,
         amount,
-      ]);
-      const request = await buildRequest(metaTxProxy, {
-        to: erc20.address,
-        from,
-        data,
-      });
-
-      const { domain, types, message } = await buildTypedData(
-        metaTxProxy,
-        request
-      );
+        nonce: Number(await metaTxProxy.nonce(from)) + 1,
+        expiry: Math.ceil(Date.now() / 1000 + 24 * 60 * 60),
+      };
       const signature = await signer._signTypedData(domain, types, message);
+      console.info('nonce', message.nonce);
+      console.info(
+        'recovered',
+        await metaTxProxy.verify(
+          {
+            from,
+            to,
+            signature,
+          },
+          {
+            tokenContract: message.tokenContract,
+            amount: message.amount,
+            nonce: message.nonce,
+            expiry: message.expiry,
+          }
+        )
+      );
 
       await fetch(`${process.env.REACT_APP_BACKEND_URL}/request-payment`, {
         method: 'POST',
@@ -175,7 +213,7 @@ const App = (): JSX.Element => {
       <Text>Cipay</Text>
       {error && (
         <Alert title="Error" type="danger">
-          {error instanceof String && error}
+          {JSON.stringify(error)}
         </Alert>
       )}
       <Card>
