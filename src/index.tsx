@@ -1,5 +1,4 @@
 import React from 'react';
-import { Provider as BumbagProvider } from 'bumbag';
 import ReactDOM from 'react-dom';
 import { Web3ReactProvider } from '@web3-react/core';
 import {
@@ -7,6 +6,7 @@ import {
   ExternalProvider,
   JsonRpcFetchFunc,
 } from '@ethersproject/providers';
+import 'ui-neumorphism/dist/index.css';
 import App from './app';
 import reportWebVitals from './report-web-vitals';
 
@@ -20,11 +20,9 @@ const getLibrary = (
 
 ReactDOM.render(
   <React.StrictMode>
-    <BumbagProvider>
-      <Web3ReactProvider getLibrary={getLibrary}>
-        <App />
-      </Web3ReactProvider>
-    </BumbagProvider>
+    <Web3ReactProvider getLibrary={getLibrary}>
+      <App />
+    </Web3ReactProvider>
   </React.StrictMode>,
   document.querySelector('#root')
 );
