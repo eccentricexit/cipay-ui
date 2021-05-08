@@ -257,15 +257,15 @@ const App = (): JSX.Element => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '32px 24px',
+        flexDirection: 'column',
       }}
     >
+      <H1 style={{ marginBottom: '24px' }}>Cipay</H1>
       <div
         style={{
-          maxWidth: '500px',
-          minWidth: '400px',
+          maxWidth: '375px',
         }}
       >
-        <H1 style={{ marginBottom: '24px' }}>Cipay</H1>
         {!brcode && <Body1>Generate Invoice a test invoice</Body1>}
         <Body2 style={{ wordBreak: 'break-all' }}>Invoice: {brcode}</Body2>
         {brcodePreview && balance && (
@@ -295,7 +295,7 @@ const App = (): JSX.Element => {
               color="#fff"
               onClick={generatePixInvoice}
             >
-              Generate Invoice
+              Generate Test Invoice
             </Button>
           )}
           {brcode && !account && (
