@@ -11,3 +11,4 @@ build
 src/abis/**
 yarn.lock
 .env.example
+*.md
