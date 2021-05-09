@@ -1,7 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { UnsupportedChainIdError } from '@web3-react/core';
-import { Body1, Body2, Button, H1 } from 'ui-neumorphism';
+import { Body1, Body2, Button, H1, ProgressCircular } from 'ui-neumorphism';
 import { ethers } from 'ethers';
+import QrReader from 'react-qr-reader';
+import Confetti from 'react-confetti';
+import useWindowSize from 'react-use/lib/useWindowSize';
 import { useDebounce, useInterval, useWallet } from './hooks';
 import erc20Abi from './abis/erc20.ovm.json';
 import metaTxProxyAbi from './abis/metaTxProxy.ovm.json';
@@ -31,6 +40,9 @@ interface BrcodePreview {
   tokenAmountRequired: string;
   tokenSymbol: string;
 }
+interface Reader {
+  current: { openImageDialog: () => void };
+}
 
 const paymentStatusToLabel: { [key: string]: string } = {
   '0': 'Request received and awaits token tx submission.',
@@ -44,6 +56,7 @@ const paymentStatusToLabel: { [key: string]: string } = {
 };
 
 const App = (): JSX.Element => {
+  const { width, height } = useWindowSize();
   const {
     account,
     onConnectWallet,
@@ -93,7 +106,10 @@ const App = (): JSX.Element => {
         )
       ).json();
 
-      if (response.error) throw new Error(response.error);
+      if (response.error) {
+        setError(response.error);
+        return;
+      }
 
       setBrcodePreview(response);
     })();
@@ -137,22 +153,6 @@ const App = (): JSX.Element => {
     await tx.wait();
     setAllowance(await erc20.allowance(account, metaTxProxy.address));
   }, [account, brcodePreview, erc20, metaTxProxy]);
-
-  const generatePixInvoice = useCallback(async () => {
-    try {
-      const {
-        invoice: { brcode },
-      } = await (
-        await fetch(`${process.env.REACT_APP_BACKEND_URL}/generate-brcode`, {
-          method: 'POST',
-        })
-      ).json();
-
-      setBrcode(brcode);
-    } catch (generatePixInvoiceError) {
-      setError(generatePixInvoiceError);
-    }
-  }, []);
 
   const [paymentRequestSent, setPaymentRequestSent] = useState<
     boolean | undefined
@@ -217,6 +217,7 @@ const App = (): JSX.Element => {
       console.error(
         `Failure!${error && error.message ? `\n\n${error.message}` : ''}`
       );
+      setError(error);
     }
   }, [
     account,
@@ -250,6 +251,19 @@ const App = (): JSX.Element => {
     polling ? 2000 : undefined
   );
 
+  const qrReaderRefeference = useRef<undefined | Reader>(undefined);
+  const openImageDialog = useCallback(() => {
+    console.info(qrReaderRefeference);
+    ((qrReaderRefeference as unknown) as Reader).current.openImageDialog();
+  }, [qrReaderRefeference]);
+  const onScanError = useCallback((error) => {
+    console.error(error);
+    setError(error);
+  }, []);
+  const onScanSuccess = useCallback((result) => {
+    setBrcode(result);
+  }, []);
+
   return (
     <div
       style={{
@@ -266,8 +280,30 @@ const App = (): JSX.Element => {
           maxWidth: '375px',
         }}
       >
-        {!brcode && <Body1>Generate Invoice a test invoice</Body1>}
-        <Body2 style={{ wordBreak: 'break-all' }}>Invoice: {brcode}</Body2>
+        {error && JSON.stringify(error)}
+        {!brcode && <Body1>Read a PIX invoice</Body1>}
+        {!brcode && (
+          <div style={{ margin: '32px 0' }}>
+            <QrReader
+              ref={qrReaderRefeference}
+              style={{ display: 'none' }}
+              onError={onScanError}
+              onScan={onScanSuccess}
+              showViewFinder={false}
+              legacyMode
+            />
+            <Button
+              color="#fff"
+              bgColor="var(--primary)"
+              onClick={openImageDialog}
+            >
+              Capture QR Code
+            </Button>
+          </div>
+        )}
+        {brcode && (
+          <Body2 style={{ wordBreak: 'break-all' }}>Invoice: {brcode}</Body2>
+        )}
         {brcodePreview && balance && (
           <div style={{ margin: '24px 0' }}>
             <Body2>Invoice Due: {brcodePreview?.amount} BRL</Body2>
@@ -289,15 +325,6 @@ const App = (): JSX.Element => {
           </div>
         )}
         <div style={{ marginTop: '24px' }}>
-          {!brcode && (
-            <Button
-              bgColor="var(--primary)"
-              color="#fff"
-              onClick={generatePixInvoice}
-            >
-              Generate Test Invoice
-            </Button>
-          )}
           {brcode && !account && (
             <Button
               color="#fff"
@@ -327,6 +354,10 @@ const App = (): JSX.Element => {
           )}
         </div>
       </div>
+      {!error && paymentRequestSent && paymentStatusCode !== '7' && (
+        <ProgressCircular indeterminate color="var(--primary)" />
+      )}
+      {paymentStatusCode === '7' && <Confetti width={width} height={height} />}
     </div>
   );
 };

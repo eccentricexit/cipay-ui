@@ -6,9 +6,11 @@ import {
   ExternalProvider,
   JsonRpcFetchFunc,
 } from '@ethersproject/providers';
+import { Switch, Route, HashRouter } from 'react-router-dom';
 import 'ui-neumorphism/dist/index.css';
 import App from './app';
 import reportWebVitals from './report-web-vitals';
+import Generator from './qr-generator';
 
 const getLibrary = (
   provider: ExternalProvider | JsonRpcFetchFunc
@@ -21,7 +23,16 @@ const getLibrary = (
 ReactDOM.render(
   <React.StrictMode>
     <Web3ReactProvider getLibrary={getLibrary}>
-      <App />
+      <HashRouter>
+        <Switch>
+          <Route path="/generator">
+            <Generator />
+          </Route>
+          <Route path="/">
+            <App />
+          </Route>
+        </Switch>
+      </HashRouter>
     </Web3ReactProvider>
   </React.StrictMode>,
   document.querySelector('#root')
