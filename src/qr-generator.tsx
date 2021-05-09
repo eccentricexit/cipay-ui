@@ -45,7 +45,6 @@ function Generator() {
         <QRCode
           style={{
             margin: 32,
-            width: '100%',
             objectFit: 'contain',
             height: '100%',
           }}
