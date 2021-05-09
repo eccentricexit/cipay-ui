@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/mtsalenc/cipay-ui/compare/v1.1.0...v1.2.0) (2021-05-09)
+
+
+### Features
+
+* use legacy mode ([96a4e59](https://github.com/mtsalenc/cipay-ui/commit/96a4e590d8b3d38e45430a63d5ac1c908e4b12ab))
+
 ## 1.1.0 (2021-05-08)
 
 
