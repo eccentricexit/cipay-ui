@@ -253,7 +253,6 @@ const App = (): JSX.Element => {
 
   const qrReaderRefeference = useRef<undefined | Reader>(undefined);
   const openImageDialog = useCallback(() => {
-    console.info(qrReaderRefeference);
     ((qrReaderRefeference as unknown) as Reader).current.openImageDialog();
   }, [qrReaderRefeference]);
   const onScanError = useCallback((error) => {

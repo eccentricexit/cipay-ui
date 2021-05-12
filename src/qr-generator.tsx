@@ -47,8 +47,9 @@ function Generator() {
             margin: 32,
             objectFit: 'contain',
             height: '100%',
+            maxWidth: '100%',
           }}
-          size={700}
+          size={500}
           value={brcode}
         />
       )}
