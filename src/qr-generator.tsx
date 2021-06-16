@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { Button } from 'ui-neumorphism';
 import QRCode from 'qrcode.react';
+import { Button } from 'antd';
 
 function Generator() {
   const [error, setError] = useState<unknown>();
@@ -33,13 +33,7 @@ function Generator() {
     >
       {error && JSON.stringify(error)}
       {!brcode && (
-        <Button
-          bgColor="var(--primary)"
-          color="#fff"
-          onClick={generatePixInvoice}
-        >
-          Generate Test Invoice
-        </Button>
+        <Button onClick={generatePixInvoice}>Generate Test Invoice</Button>
       )}
       {brcode && (
         <QRCode

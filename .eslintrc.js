@@ -43,6 +43,7 @@ module.exports = {
         'react/prop-types': 'off',
         '@typescript-eslint/no-unused-vars': ['warn'],
         'unicorn/no-useless-undefined': 0,
+        'unicorn/no-null': 0,
 
         '@typescript-eslint/explicit-function-return-type': 0,
         '@typescript-eslint/explicit-module-boundary-types': 0,
@@ -79,6 +80,7 @@ module.exports = {
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/no-abusive-eslint-disable': 'off',
     'unicorn/no-useless-undefined': 0,
+    'unicorn/no-null': 'off',
 
     'react/jsx-indent': 0,
     'react/jsx-curly-brace-presence': [2, 'never'],

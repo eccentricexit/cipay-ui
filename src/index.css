@@ -1,0 +1,16 @@
+body {
+  background-color: var(--light-bg);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+html,
+body,
+#app,
+#app > div {
+  height: 100%;
+}

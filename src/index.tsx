@@ -7,10 +7,11 @@ import {
   JsonRpcFetchFunc,
 } from '@ethersproject/providers';
 import { Switch, Route, HashRouter } from 'react-router-dom';
-import 'ui-neumorphism/dist/index.css';
 import App from './app';
 import reportWebVitals from './report-web-vitals';
 import Generator from './qr-generator';
+import './index.css';
+import 'antd/dist/antd.css';
 
 const getLibrary = (
   provider: ExternalProvider | JsonRpcFetchFunc
