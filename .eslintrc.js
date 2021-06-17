@@ -41,6 +41,9 @@ module.exports = {
       rules: {
         // We will use TypeScript's types for component props instead
         'react/prop-types': 'off',
+        'react/jsx-uses-react': 'off',
+        'react/react-in-jsx-scope': 'off',
+
         '@typescript-eslint/no-unused-vars': ['warn'],
         'unicorn/no-useless-undefined': 0,
         'unicorn/no-null': 0,
@@ -88,6 +91,8 @@ module.exports = {
     // React
     'react/prefer-stateless-function': 2,
     'react/destructuring-assignment': [2, 'always'],
+    'react/jsx-uses-react': 'off',
+    'react/react-in-jsx-scope': 'off',
 
     // hooks
     'react-hooks/rules-of-hooks': 'warn',

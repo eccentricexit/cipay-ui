@@ -1,4 +1,4 @@
-export const ERC20MetaTransaction = [
+const ERC20MetaTransaction = [
   { name: 'from', type: 'address' },
   { name: 'to', type: 'address' },
   { name: 'tokenContract', type: 'address' },
@@ -6,3 +6,5 @@ export const ERC20MetaTransaction = [
   { name: 'nonce', type: 'uint256' },
   { name: 'expiry', type: 'uint256' },
 ];
+
+export default ERC20MetaTransaction;
