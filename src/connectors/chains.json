@@ -1077,6 +1077,23 @@
     "infoURL": "https://energyweb.org"
   },
   {
+    "name": "Arbitrum Rinkeby Testnet",
+    "chainId": 421611,
+    "shortName": "okov",
+    "chain": "ETH",
+    "network": "rinkeby",
+    "networkId": 421611,
+    "nativeCurrency": {
+      "name": "Rinkeby Ether",
+      "symbol": "RETH",
+      "decimals": 18
+    },
+    "rpc": ["https://rinkeby.arbitrum.io/rpc"],
+    "faucets": [],
+    "explorers": ["https://rinkeby-explorer.arbitrum.io/#/"],
+    "infoURL": "https://developer.offchainlabs.com/docs/public_testnet"
+  }
+  {
     "name": "ARTIS sigma1",
     "chainId": 246529,
     "shortName": "ats",

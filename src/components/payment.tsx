@@ -31,13 +31,13 @@ const paymentStatusToLabel: { [key: string]: string } = {
 
 function Payment({
   erc20,
-  metaTxProxy,
+  metaTxRelay,
   allowance,
   symbol,
   increaseAllowance,
 }: {
   erc20: '' | ethers.Contract | null | undefined;
-  metaTxProxy: ethers.Contract | undefined;
+  metaTxRelay: ethers.Contract | undefined;
   allowance: ethers.BigNumber | unknown;
   symbol: string | unknown;
   increaseAllowance: () => Promise<void> | undefined;
@@ -93,7 +93,7 @@ function Payment({
         !account ||
         !chainId ||
         !erc20 ||
-        !metaTxProxy ||
+        !metaTxRelay ||
         !library ||
         !brcodePreview
       )
@@ -109,8 +109,9 @@ function Payment({
       const types = { ERC20MetaTransaction };
       const domain = {
         name: 'MetaTxRelay',
-        version: '1',
-        verifyingContract: metaTxProxy.address,
+        version: '1.0.0',
+        verifyingContract: metaTxRelay.address,
+        chainId,
       };
 
       const message: SignRequest = {
@@ -118,7 +119,7 @@ function Payment({
         to,
         tokenContract: erc20.address,
         amount,
-        nonce: Number(await metaTxProxy.nonce(from)) + 1,
+        nonce: Number(await metaTxRelay.nonce(from)) + 1,
         expiry: Math.ceil(Date.now() / 1000 + 24 * 60 * 60),
       };
       const signature = await signer._signTypedData(domain, types, message);
@@ -160,7 +161,7 @@ function Payment({
     chainId,
     erc20,
     library,
-    metaTxProxy,
+    metaTxRelay,
     signer,
   ]);
 
