@@ -180,7 +180,8 @@ const App = (): JSX.Element => {
       const types = { ERC20MetaTransaction };
       const domain = {
         name: 'MetaTxRelay',
-        version: '1',
+        version: '1.0.0',
+        chainId: chainId.toString(),
         verifyingContract: metaTxProxy.address,
       };
 
@@ -190,33 +191,43 @@ const App = (): JSX.Element => {
         tokenContract: erc20.address,
         amount,
         nonce: Number(await metaTxProxy.nonce(from)) + 1,
-        expiry: Math.ceil(Date.now() / 1000 + 24 * 60 * 60),
+        expiry: Math.ceil(Date.now() / 1000 + 24 * 60 * 60), // 24 hours.
       };
       const signature = await signer._signTypedData(domain, types, message);
 
-      await fetch(`${process.env.REACT_APP_BACKEND_URL}/request-payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          web3: {
-            signature,
-            typedData: {
-              domain,
-              types,
-              message,
-            },
-            claimedAddr: account,
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/request-payment`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          brcode: brcode,
-        }),
-      });
-      setPaymentRequestSent(true);
-    } catch (error) {
-      console.error(
-        `Failure!${error && error.message ? `\n\n${error.message}` : ''}`
+          body: JSON.stringify({
+            web3: {
+              signature,
+              typedData: {
+                domain,
+                types,
+                message,
+              },
+              claimedAddr: account,
+            },
+            brcode: brcode,
+          }),
+        }
       );
+
+      const parsedResponse = await response.json();
+      console.info(parsedResponse);
+
+      if (response.status !== 200)
+        throw new Error(JSON.stringify(parsedResponse));
+
+      setPaymentRequestSent(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const errorMessage = error ? (error.message ? error.message : error) : ``;
+      console.error(`Failure! ${errorMessage}`);
       setError(error);
     }
   }, [
@@ -240,15 +251,14 @@ const App = (): JSX.Element => {
         return;
       }
       if (!brcodePreview || !paymentRequestSent) return;
-      setPaymentState(
-        await (
-          await fetch(
-            `${process.env.REACT_APP_BACKEND_URL}/payment-status?id=${brcodePreview?.id}`
-          )
-        ).json()
-      );
+      const paymentState = await (
+        await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/payment-status?id=${brcodePreview?.id}`
+        )
+      ).json();
+      setPaymentState(paymentState);
     },
-    polling ? 2000 : undefined
+    polling ? 10000 : undefined
   );
 
   const qrReaderRefeference = useRef<undefined | Reader>(undefined);
@@ -305,7 +315,7 @@ const App = (): JSX.Element => {
         )}
         {brcodePreview && balance && (
           <div style={{ margin: '24px 0' }}>
-            <Body2>Invoice Due: {brcodePreview?.amount} BRL</Body2>
+            <Body2>Invoice Due: {brcodePreview?.amount / 100} BRL</Body2>
             <Body2>
               You will be charged{' '}
               {ethers.utils.formatUnits(brcodePreview?.tokenAmountRequired, 18)}{' '}

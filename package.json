@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "scripts": {
-    "start": "PORT=3001 react-scripts start",
+    "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "lint:eslint": "eslint --ext js,jsx,ts,tsx .",
     "lint:eslint:fix": "eslint --ext js,jsx,ts,tsx --fix .",
